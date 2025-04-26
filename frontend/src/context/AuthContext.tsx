@@ -1,8 +1,14 @@
 import { createContext, useState, useEffect, ReactNode } from 'react';
 import axios from 'axios';
-import jwt_decode from 'jwt-decode';
+import { jwtDecode, JwtPayload } from 'jwt-decode';
 
 interface User {
+  id: string;
+  username: string;
+  role: string;
+}
+
+interface CustomJwtPayload extends JwtPayload {
   id: string;
   username: string;
   role: string;
@@ -16,6 +22,7 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
 }
+
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -38,35 +45,40 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      if (token) {
-        try {
-          // Verify token expiration
-          const decoded: any = jwt_decode(token);
-          const currentTime = Date.now() / 1000;
-          
-          if (decoded.exp < currentTime) {
-            handleLogout();
-          } else {
-            // Set authorization header for all API requests
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-            
-            // Get user info
-            const userInfo: User = {
-              id: decoded.id,
-              username: decoded.username,
-              role: decoded.role
-            };
-            
-            setUser(userInfo);
-            setIsAuthenticated(true);
-          }
-        } catch (error) {
-          handleLogout();
-        }
+      if (!token) {
+        setLoading(false);
+        return;
       }
+  
+      try {
+        // decode the token into a JwtPayload
+        const payload = jwtDecode<CustomJwtPayload>(token);
+        const currentTime = Date.now() / 1000;
+  
+        // if there's no exp or it's in the past, logout
+        if (!payload.exp || payload.exp < currentTime) {
+          handleLogout();
+        } else {
+          // set the Authorization header for axios
+          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  
+          // build your User object from the payload
+          const userInfo: User = {
+            id: payload.id as string,          // or payload.sub if your token uses 'sub'
+            username: payload.username as string,
+            role: payload.role as string
+          };
+  
+          setUser(userInfo);
+          setIsAuthenticated(true);
+        }
+      } catch {
+        handleLogout();
+      }
+  
       setLoading(false);
     };
-
+  
     checkAuth();
   }, [token]);
 
