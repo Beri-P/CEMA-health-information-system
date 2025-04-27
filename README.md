@@ -81,7 +81,7 @@ DATABASE_URL=postgres://user:password@localhost:5432/cema_db
 JWT_SECRET=your_jwt_secret
 ```
 
-Running the App
+Running the App Locally
 Start Backend (port 5000)
 
 ```
@@ -97,6 +97,40 @@ npm run dev
 ```
 
 Then open http://localhost:5173 in your browser.
+
+
+Using Docker
+
+1. Ensure you have Docker & Docker Compose installed.
+
+2. Create a .env file at the project root (next to docker-compose.yml) with:
+
+```
+# backend service
+DATABASE_URL=postgres://user:password@db:5432/cema_db
+JWT_SECRET=your_jwt_secret
+
+# frontend service
+VITE_API_URL=http://localhost:3000
+```
+3. Build & start all services:
+
+```
+docker-compose up --build
+```
+4. Access:
+
+Frontend → http://localhost
+
+Backend API → http://localhost:3000
+
+PostgreSQL DB → localhost:5432 (user/password as set in .env)
+
+5. Stop services when done:
+
+```
+docker-compose down
+```
 
 Testing
 
