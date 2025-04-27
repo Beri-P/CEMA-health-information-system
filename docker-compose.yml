@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgres://postgres:Prometheus844@db:5432/health_system
+      - JWT_SECRET=your_super_secret_key_here
+      - JWT_EXPIRES_IN=24h
+    depends_on:
+      - db
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    environment:
+      - VITE_API_URL=http://localhost:3000
+    depends_on:
+      - backend
+
+  db:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=Prometheus844
+      - POSTGRES_DB=health_system
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
