@@ -32,51 +32,57 @@ const Dashboard: React.FC = () => {
   }, []);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '200px' }}>
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
+    <div className="container">
+      <h1 className="mb-4">Dashboard</h1>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <div className="p-6 bg-white rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-2">Total Clients</h2>
-          <p className="text-3xl text-blue-600">{stats.totalClients}</p>
-          <Link
-            to="/clients"
-            className="mt-4 inline-block text-blue-500 hover:text-blue-600"
-          >
-            View all clients →
-          </Link>
+      <div className="row g-4">
+        <div className="col-md-4">
+          <div className="card shadow-sm">
+            <div className="card-body">
+              <h2 className="card-title">Total Clients</h2>
+              <p className="display-4 text-primary">{stats.totalClients}</p>
+              <Link to="/clients" className="btn btn-outline-primary mt-2">
+                View all clients →
+              </Link>
+            </div>
+          </div>
         </div>
 
-        <div className="p-6 bg-white rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-2">Total Programs</h2>
-          <p className="text-3xl text-green-600">{stats.totalPrograms}</p>
-          <Link
-            to="/programs"
-            className="mt-4 inline-block text-blue-500 hover:text-blue-600"
-          >
-            View all programs →
-          </Link>
+        <div className="col-md-4">
+          <div className="card shadow-sm">
+            <div className="card-body">
+              <h2 className="card-title">Total Programs</h2>
+              <p className="display-4 text-success">{stats.totalPrograms}</p>
+              <Link to="/programs" className="btn btn-outline-primary mt-2">
+                View all programs →
+              </Link>
+            </div>
+          </div>
         </div>
 
-        <div className="p-6 bg-white rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-2">Quick Actions</h2>
-          <div className="space-y-2">
-            <Link
-              to="/clients/new"
-              className="block text-blue-500 hover:text-blue-600"
-            >
-              Add New Client →
-            </Link>
-            <Link
-              to="/programs/new"
-              className="block text-blue-500 hover:text-blue-600"
-            >
-              Add New Program →
-            </Link>
+        <div className="col-md-4">
+          <div className="card shadow-sm">
+            <div className="card-body">
+              <h2 className="card-title">Quick Actions</h2>
+              <div className="d-grid gap-2">
+                <Link to="/clients/new" className="btn btn-primary">
+                  Add New Client
+                </Link>
+                <Link to="/programs/new" className="btn btn-success">
+                  Add New Program
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </div>

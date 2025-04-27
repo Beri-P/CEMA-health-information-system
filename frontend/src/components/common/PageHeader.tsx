@@ -21,29 +21,29 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   children
 }) => {
   return (
-    <div className="mb-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center">
+    <div className="mb-4">
+      <div className="d-flex justify-content-between align-items-center">
+        <div className="d-flex align-items-center">
           {backButton && (
             <Link
               to={backButton.to}
-              className="text-blue-500 hover:text-blue-600 mr-4"
+              className="btn btn-outline-secondary me-3"
             >
-              ← {backButton.label || 'Back'}
+              <i className="bi bi-arrow-left"></i> {backButton.label || 'Back'}
             </Link>
           )}
-          <h1 className="text-2xl font-bold">{title}</h1>
+          <h1 className="mb-0">{title}</h1>
         </div>
         {actionButton && (
           <Link
             to={actionButton.to}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+            className="btn btn-primary"
           >
             {actionButton.label}
           </Link>
         )}
       </div>
-      {children && <div className="mt-4">{children}</div>}
+      {children && <div className="mt-3">{children}</div>}
     </div>
   );
 };

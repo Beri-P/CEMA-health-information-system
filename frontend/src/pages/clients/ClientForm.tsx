@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Formik, Form, Field } from 'formik';
-import { FormikErrorMessage } from 'formik';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { createClient } from '../../services/api';
 import { Client } from '../../types';
@@ -76,98 +75,98 @@ const ClientForm: React.FC = () => {
         >
           {({ isSubmitting }) => (
             <Form className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="firstName" className="block mb-1 font-medium">
+              <div className="row">
+                <div className="col-md-6 mb-3">
+                  <label htmlFor="firstName" className="form-label">
                     First Name
                   </label>
                   <Field
                     type="text"
                     id="firstName"
                     name="firstName"
-                    className="w-full border rounded p-2"
+                    className="form-control"
                   />
-                  <FormikErrorMessage
+                  <ErrorMessage
                     name="firstName"
                     component="div"
-                    className="text-red-500 text-sm mt-1"
+                    className="text-danger"
                   />
                 </div>
 
-                <div>
-                  <label htmlFor="lastName" className="block mb-1 font-medium">
+                <div className="col-md-6 mb-3">
+                  <label htmlFor="lastName" className="form-label">
                     Last Name
                   </label>
                   <Field
                     type="text"
                     id="lastName"
                     name="lastName"
-                    className="w-full border rounded p-2"
+                    className="form-control"
                   />
-                  <FormikErrorMessage
+                  <ErrorMessage
                     name="lastName"
                     component="div"
-                    className="text-red-500 text-sm mt-1"
+                    className="text-danger"
                   />
                 </div>
 
-                <div>
-                  <label htmlFor="dateOfBirth" className="block mb-1 font-medium">
+                <div className="col-md-6 mb-3">
+                  <label htmlFor="dateOfBirth" className="form-label">
                     Date of Birth
                   </label>
                   <Field
                     type="date"
                     id="dateOfBirth"
                     name="dateOfBirth"
-                    className="w-full border rounded p-2"
+                    className="form-control"
                   />
-                  <FormikErrorMessage
+                  <ErrorMessage
                     name="dateOfBirth"
                     component="div"
-                    className="text-red-500 text-sm mt-1"
+                    className="text-danger"
                   />
                 </div>
 
-                <div>
-                  <label htmlFor="phone" className="block mb-1 font-medium">
+                <div className="col-md-6 mb-3">
+                  <label htmlFor="phone" className="form-label">
                     Phone (optional)
                   </label>
                   <Field
                     type="tel"
                     id="phone"
                     name="phone"
-                    className="w-full border rounded p-2"
+                    className="form-control"
                   />
-                  <FormikErrorMessage
+                  <ErrorMessage
                     name="phone"
                     component="div"
-                    className="text-red-500 text-sm mt-1"
+                    className="text-danger"
                   />
                 </div>
 
-                <div className="md:col-span-2">
-                  <label htmlFor="email" className="block mb-1 font-medium">
+                <div className="col-12 mb-3">
+                  <label htmlFor="email" className="form-label">
                     Email (optional)
                   </label>
                   <Field
                     type="email"
                     id="email"
                     name="email"
-                    className="w-full border rounded p-2"
+                    className="form-control"
                   />
-                  <FormikErrorMessage
+                  <ErrorMessage
                     name="email"
                     component="div"
-                    className="text-red-500 text-sm mt-1"
+                    className="text-danger"
                   />
                 </div>
               </div>
 
-              <div className="mt-6">
+              <div className="mt-4">
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 disabled:opacity-50 transition-colors"
+                  className="btn btn-primary w-100"
                 >
                   {isSubmitting ? 'Saving...' : 'Save Client'}
                 </button>

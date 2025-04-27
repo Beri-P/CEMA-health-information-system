@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { Formik, Form, Field } from 'formik';
-import { FormikErrorMessage } from 'formik';
+import { Formik, Form, Field, ErrorMessage as FormikError } from 'formik';
 import * as Yup from 'yup';
 import { createEnrollment, getPrograms } from '../../services/api';
 import { Program } from '../../types';
@@ -64,14 +63,14 @@ const EnrollmentForm: React.FC = () => {
 
   return (
     <div className="max-w-md mx-auto mt-8">
-      <div className="mb-6 flex items-center">
+      <div className="mb-6 d-flex align-items-center">
         <Link
           to={`/clients/${clientId}`}
-          className="text-blue-500 hover:text-blue-600 mr-4"
+          className="btn btn-outline-primary me-3"
         >
           ← Back to Client
         </Link>
-        <h2 className="text-2xl font-bold">Enroll in Program</h2>
+        <h2 className="h4 mb-0">Enroll in Program</h2>
       </div>
 
       {error && (
@@ -82,10 +81,10 @@ const EnrollmentForm: React.FC = () => {
 
       {programs.length === 0 ? (
         <div className="text-center">
-          <p className="text-gray-500 mb-4">No programs available for enrollment.</p>
+          <p className="text-muted mb-4">No programs available for enrollment.</p>
           <Link
             to="/programs/new"
-            className="text-blue-500 hover:text-blue-600"
+            className="btn btn-primary"
           >
             Create a new program
           </Link>
@@ -97,38 +96,40 @@ const EnrollmentForm: React.FC = () => {
           onSubmit={handleSubmit}
         >
           {({ isSubmitting }) => (
-            <Form className="space-y-4 bg-white p-6 rounded-lg shadow">
-              <div>
-                <label htmlFor="programId" className="block mb-1 font-medium">
-                  Select Program
-                </label>
-                <Field
-                  as="select"
-                  id="programId"
-                  name="programId"
-                  className="w-full border rounded p-2"
-                >
-                  <option value="">Select a program...</option>
-                  {programs.map((program) => (
-                    <option key={program.id} value={program.id}>
-                      {program.name}
-                    </option>
-                  ))}
-                </Field>
-                <FormikErrorMessage
-                  name="programId"
-                  component="div"
-                  className="text-red-500 text-sm mt-1"
-                />
-              </div>
+            <Form className="card shadow">
+              <div className="card-body">
+                <div className="mb-3">
+                  <label htmlFor="programId" className="form-label">
+                    Select Program
+                  </label>
+                  <Field
+                    as="select"
+                    id="programId"
+                    name="programId"
+                    className="form-select"
+                  >
+                    <option value="">Select a program...</option>
+                    {programs.map((program) => (
+                      <option key={program.id} value={program.id}>
+                        {program.name}
+                      </option>
+                    ))}
+                  </Field>
+                  <FormikError
+                    name="programId"
+                    component="div"
+                    className="text-danger small mt-1"
+                  />
+                </div>
 
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 disabled:opacity-50 transition-colors"
-              >
-                {isSubmitting ? 'Enrolling...' : 'Enroll'}
-              </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="btn btn-primary w-100"
+                >
+                  {isSubmitting ? 'Enrolling...' : 'Enroll'}
+                </button>
+              </div>
             </Form>
           )}
         </Formik>
