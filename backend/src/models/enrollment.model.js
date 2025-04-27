@@ -1,55 +1,53 @@
-module.exports = (sequelize, DataTypes) => {
-  const Enrollment = sequelize.define(
-    "Enrollment",
-    {
-      enrollment_id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
-        primaryKey: true,
-      },
-      client_id: {
-        type: DataTypes.UUID,
-        allowNull: false,
-        references: {
-          model: "client",
-          key: "client_id",
-        },
-      },
-      program_id: {
-        type: DataTypes.UUID,
-        allowNull: false,
-        references: {
-          model: "program",
-          key: "program_id",
-        },
-      },
-      enrollment_date: {
-        type: DataTypes.DATEONLY,
-        allowNull: false,
-        defaultValue: DataTypes.NOW,
-      },
-      status: {
-        type: DataTypes.STRING(50),
-        allowNull: false,
-        defaultValue: "active",
-      },
-      notes: {
-        type: DataTypes.TEXT,
-      },
-    },
-    {
-      tableName: "enrollment",
-      timestamps: true,
-      createdAt: "created_at",
-      updatedAt: "updated_at",
-      indexes: [
-        {
-          unique: true,
-          fields: ["client_id", "program_id"],
-        },
-      ],
-    }
-  );
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-  return Enrollment;
-};
+const Enrollment = sequelize.define(
+  "Enrollment",
+  {
+    enrollmentId: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+      field: 'enrollment_id'
+    },
+    clientId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: "Client",
+        key: "clientId",
+      },
+      field: 'client_id'
+    },
+    programId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: "Program",
+        key: "programId",
+      },
+      field: 'program_id'
+    },
+    enrollmentDate: {
+      type: DataTypes.DATEONLY,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+      field: 'enrollment_date'
+    },
+    status: {
+      type: DataTypes.STRING(50),
+      allowNull: false,
+      defaultValue: "active"
+    },
+    notes: {
+      type: DataTypes.TEXT
+    }
+  },
+  {
+    tableName: "enrollment",
+    timestamps: true,
+    underscored: true
+  }
+);
+
+module.exports = Enrollment;

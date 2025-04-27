@@ -1,248 +1,180 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Formik, Form, Field, ErrorMessage } from 'formik';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Formik, Form, Field } from 'formik';
+import { FormikErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import { clientsApi } from '../../services/api';
+import { createClient } from '../../services/api';
+import { Client } from '../../types';
+import CustomErrorMessage from '../../components/common/ErrorMessage';
+import PageHeader from '../../components/common/PageHeader';
 
-const ClientSchema = Yup.object().shape({
-  first_name: Yup.string().required('First name is required'),
-  last_name: Yup.string().required('Last name is required'),
-  date_of_birth: Yup.date().required('Date of birth is required'),
-  gender: Yup.string().required('Gender is required'),
-  contact_number: Yup.string(),
-  email: Yup.string().email('Invalid email format'),
-  address: Yup.string()
+type ClientFormData = Omit<Client, 'id' | 'createdAt' | 'updatedAt'>;
+
+const validationSchema = Yup.object({
+  firstName: Yup.string()
+    .required('First name is required')
+    .min(2, 'First name must be at least 2 characters')
+    .max(50, 'First name must be at most 50 characters'),
+  lastName: Yup.string()
+    .required('Last name is required')
+    .min(2, 'Last name must be at least 2 characters')
+    .max(50, 'Last name must be at most 50 characters'),
+  dateOfBirth: Yup.date()
+    .required('Date of birth is required')
+    .max(new Date(), 'Date of birth cannot be in the future'),
+  phone: Yup.string()
+    .nullable()
+    .matches(/^[+]?[\d\s-]+$/, 'Invalid phone number format'),
+  email: Yup.string()
+    .nullable()
+    .email('Invalid email address')
 });
 
-interface ClientFormValues {
-  first_name: string;
-  last_name: string;
-  date_of_birth: string;
-  gender: string;
-  contact_number: string;
-  email: string;
-  address: string;
-}
-
-const ClientForm = () => {
-  const { id } = useParams();
+const ClientForm: React.FC = () => {
   const navigate = useNavigate();
-  const [initialValues, setInitialValues] = useState<ClientFormValues>({
-    first_name: '',
-    last_name: '',
-    date_of_birth: '',
-    gender: '',
-    contact_number: '',
-    email: '',
-    address: ''
-  });
-  const [loading, setLoading] = useState(id ? true : false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchClient = async () => {
-      if (id) {
-        try {
-          setLoading(true);
-          const response = await clientsApi.getById(id);
-          const client = response.data;
-          
-          // Format date to YYYY-MM-DD for input field
-          const formattedDate = client.date_of_birth ? 
-            new Date(client.date_of_birth).toISOString().split('T')[0] : '';
-          
-          setInitialValues({
-            first_name: client.first_name || '',
-            last_name: client.last_name || '',
-            date_of_birth: formattedDate,
-            gender: client.gender || '',
-            contact_number: client.contact_number || '',
-            email: client.email || '',
-            address: client.address || ''
-          });
-        } catch (err) {
-          console.error('Error fetching client:', err);
-          setError('Failed to load client data');
-        } finally {
-          setLoading(false);
-        }
-      }
-    };
+  const initialValues: ClientFormData = {
+    firstName: '',
+    lastName: '',
+    dateOfBirth: '',
+    phone: '',
+    email: ''
+  };
 
-    fetchClient();
-  }, [id]);
-
-  const handleSubmit = async (values: ClientFormValues) => {
+  const handleSubmit = async (values: ClientFormData) => {
     try {
-      if (id) {
-        await clientsApi.update(id, values);
-      } else {
-        await clientsApi.create(values);
-      }
+      await createClient(values);
       navigate('/clients');
     } catch (err) {
-      console.error('Error saving client:', err);
-      setError('Failed to save client');
+      setError('Failed to create client. Please try again.');
+      console.error('Error creating client:', err);
     }
   };
 
-  if (loading) {
-    return <div className="text-center my-5"><div className="spinner-border"></div></div>;
-  }
-
   return (
-    <div>
-      <h1>{id ? 'Edit' : 'Register'} Client</h1>
-      
-      {error && <div className="alert alert-danger">{error}</div>}
-      
-      <div className="card">
-        <div className="card-body">
-          <Formik
-            initialValues={initialValues}
-            validationSchema={ClientSchema}
-            onSubmit={handleSubmit}
-            enableReinitialize
-          >
-            {({ isSubmitting }) => (
-              <Form>
-                <div className="row">
-                  <div className="col-md-6 mb-3">
-                    <label htmlFor="first_name" className="form-label">First Name</label>
-                    <Field
-                      type="text"
-                      id="first_name"
-                      name="first_name"
-                      className="form-control"
-                    />
-                    <ErrorMessage
-                      name="first_name"
-                      component="div"
-                      className="text-danger"
-                    />
-                  </div>
-                  
-                  <div className="col-md-6 mb-3">
-                    <label htmlFor="last_name" className="form-label">Last Name</label>
-                    <Field
-                      type="text"
-                      id="last_name"
-                      name="last_name"
-                      className="form-control"
-                    />
-                    <ErrorMessage
-                      name="last_name"
-                      component="div"
-                      className="text-danger"
-                    />
-                  </div>
-                </div>
-                
-                <div className="row">
-                  <div className="col-md-6 mb-3">
-                    <label htmlFor="date_of_birth" className="form-label">Date of Birth</label>
-                    <Field
-                      type="date"
-                      id="date_of_birth"
-                      name="date_of_birth"
-                      className="form-control"
-                    />
-                    <ErrorMessage
-                      name="date_of_birth"
-                      component="div"
-                      className="text-danger"
-                    />
-                  </div>
-                  
-                  <div className="col-md-6 mb-3">
-                    <label htmlFor="gender" className="form-label">Gender</label>
-                    <Field
-                      as="select"
-                      id="gender"
-                      name="gender"
-                      className="form-select"
-                    >
-                      <option value="">Select gender</option>
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                      <option value="other">Other</option>
-                    </Field>
-                    <ErrorMessage
-                      name="gender"
-                      component="div"
-                      className="text-danger"
-                    />
-                  </div>
-                </div>
-                
-                <div className="row">
-                  <div className="col-md-6 mb-3">
-                    <label htmlFor="contact_number" className="form-label">Contact Number</label>
-                    <Field
-                      type="text"
-                      id="contact_number"
-                      name="contact_number"
-                      className="form-control"
-                    />
-                    <ErrorMessage
-                      name="contact_number"
-                      component="div"
-                      className="text-danger"
-                    />
-                  </div>
-                  
-                  <div className="col-md-6 mb-3">
-                    <label htmlFor="email" className="form-label">Email</label>
-                    <Field
-                      type="email"
-                      id="email"
-                      name="email"
-                      className="form-control"
-                    />
-                    <ErrorMessage
-                      name="email"
-                      component="div"
-                      className="text-danger"
-                    />
-                  </div>
-                </div>
-                
-                <div className="mb-3">
-                  <label htmlFor="address" className="form-label">Address</label>
-                  <Field
-                    as="textarea"
-                    id="address"
-                    name="address"
-                    className="form-control"
-                    rows={3}
-                  />
-                  <ErrorMessage
-                    name="address"
-                    component="div"
-                    className="text-danger"
-                  />
-                </div>
-                
-                <div className="d-flex gap-2">
-                  <button
-                    type="submit"
-                    className="btn btn-primary"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? 'Saving...' : 'Save'}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={() => navigate('/clients')}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </Form>
-            )}
-          </Formik>
+    <div className="container mx-auto p-4">
+      <PageHeader
+        title="Add New Client"
+        backButton={{
+          to: "/clients",
+          label: "Back to Clients"
+        }}
+      />
+
+      {error && (
+        <div className="mb-4">
+          <CustomErrorMessage message={error} />
         </div>
+      )}
+
+      <div className="max-w-2xl mx-auto">
+        <Formik
+          initialValues={initialValues}
+          validationSchema={validationSchema}
+          onSubmit={handleSubmit}
+        >
+          {({ isSubmitting }) => (
+            <Form className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="firstName" className="block mb-1 font-medium">
+                    First Name
+                  </label>
+                  <Field
+                    type="text"
+                    id="firstName"
+                    name="firstName"
+                    className="w-full border rounded p-2"
+                  />
+                  <FormikErrorMessage
+                    name="firstName"
+                    component="div"
+                    className="text-red-500 text-sm mt-1"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="lastName" className="block mb-1 font-medium">
+                    Last Name
+                  </label>
+                  <Field
+                    type="text"
+                    id="lastName"
+                    name="lastName"
+                    className="w-full border rounded p-2"
+                  />
+                  <FormikErrorMessage
+                    name="lastName"
+                    component="div"
+                    className="text-red-500 text-sm mt-1"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="dateOfBirth" className="block mb-1 font-medium">
+                    Date of Birth
+                  </label>
+                  <Field
+                    type="date"
+                    id="dateOfBirth"
+                    name="dateOfBirth"
+                    className="w-full border rounded p-2"
+                  />
+                  <FormikErrorMessage
+                    name="dateOfBirth"
+                    component="div"
+                    className="text-red-500 text-sm mt-1"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="phone" className="block mb-1 font-medium">
+                    Phone (optional)
+                  </label>
+                  <Field
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    className="w-full border rounded p-2"
+                  />
+                  <FormikErrorMessage
+                    name="phone"
+                    component="div"
+                    className="text-red-500 text-sm mt-1"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label htmlFor="email" className="block mb-1 font-medium">
+                    Email (optional)
+                  </label>
+                  <Field
+                    type="email"
+                    id="email"
+                    name="email"
+                    className="w-full border rounded p-2"
+                  />
+                  <FormikErrorMessage
+                    name="email"
+                    component="div"
+                    className="text-red-500 text-sm mt-1"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 disabled:opacity-50 transition-colors"
+                >
+                  {isSubmitting ? 'Saving...' : 'Save Client'}
+                </button>
+              </div>
+            </Form>
+          )}
+        </Formik>
       </div>
     </div>
   );

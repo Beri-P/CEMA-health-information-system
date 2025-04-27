@@ -1,122 +1,48 @@
-const { Enrollment, Client, Program } = require("../models");
+const { Enrollment, Client, Program } = require('../models');
 
-// Create new enrollment
-const createEnrollment = async (req, res) => {
+// Create a new enrollment
+exports.createEnrollment = async (req, res) => {
   try {
-    const { client_id, program_id, enrollment_date, status, notes } = req.body;
-
-    // Check if client exists
-    const client = await Client.findByPk(client_id);
-    if (!client) {
-      return res.status(404).json({ message: "Client not found" });
-    }
-
-    // Check if program exists
-    const program = await Program.findByPk(program_id);
-    if (!program) {
-      return res.status(404).json({ message: "Program not found" });
-    }
-
-    // Check if enrollment already exists
-    const existingEnrollment = await Enrollment.findOne({
-      where: {
-        client_id,
-        program_id,
-      },
+    const { clientId, programId } = req.body;
+    const enrollment = await Enrollment.create({
+      clientId,
+      programId,
+      enrollmentDate: new Date(),
+      status: 'active'
     });
-
-    if (existingEnrollment) {
-      return res
-        .status(409)
-        .json({ message: "Client is already enrolled in this program" });
-    }
-
-    const newEnrollment = await Enrollment.create({
-      client_id,
-      program_id,
-      enrollment_date: enrollment_date || new Date(),
-      status: status || "active",
-      notes,
-    });
-
-    return res.status(201).json(newEnrollment);
-  } catch (error) {
-    console.error("Error creating enrollment:", error);
-    return res
-      .status(500)
-      .json({ message: "Failed to create enrollment", error: error.message });
+    res.status(201).json(enrollment);
+  } catch (err) {
+    res.status(400).json({ message: 'Error creating enrollment' });
   }
 };
 
-// Update enrollment
-const updateEnrollment = async (req, res) => {
+// Get enrollments by client
+exports.getClientEnrollments = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { enrollment_date, status, notes } = req.body;
-
-    const enrollment = await Enrollment.findByPk(id);
-
-    if (!enrollment) {
-      return res.status(404).json({ message: "Enrollment not found" });
-    }
-
-    await enrollment.update({
-      enrollment_date,
-      status,
-      notes,
-    });
-
-    return res.status(200).json(enrollment);
-  } catch (error) {
-    console.error("Error updating enrollment:", error);
-    return res
-      .status(500)
-      .json({ message: "Failed to update enrollment", error: error.message });
-  }
-};
-
-// Delete enrollment
-const deleteEnrollment = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const enrollment = await Enrollment.findByPk(id);
-
-    if (!enrollment) {
-      return res.status(404).json({ message: "Enrollment not found" });
-    }
-
-    await enrollment.destroy();
-
-    return res.status(200).json({ message: "Enrollment deleted successfully" });
-  } catch (error) {
-    console.error("Error deleting enrollment:", error);
-    return res
-      .status(500)
-      .json({ message: "Failed to delete enrollment", error: error.message });
-  }
-};
-
-// Get all enrollments
-const getAllEnrollments = async (req, res) => {
-  try {
+    const clientId = parseInt(req.params.clientId, 10);
     const enrollments = await Enrollment.findAll({
-      include: [{ model: Client }, { model: Program }],
-      order: [["created_at", "DESC"]],
+      where: { clientId },
+      include: [Program]
     });
-
-    return res.status(200).json(enrollments);
-  } catch (error) {
-    console.error("Error fetching enrollments:", error);
-    return res
-      .status(500)
-      .json({ message: "Failed to fetch enrollments", error: error.message });
+    res.json(enrollments);
+  } catch (err) {
+    res.status(500).json({ message: 'Error retrieving enrollments' });
   }
 };
 
-module.exports = {
-  createEnrollment,
-  updateEnrollment,
-  deleteEnrollment,
-  getAllEnrollments,
+// Update enrollment status
+exports.updateEnrollmentStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const enrollmentId = parseInt(req.params.id, 10);
+    const enrollment = await Enrollment.findByPk(enrollmentId);
+    if (!enrollment) {
+      return res.status(404).json({ message: 'Enrollment not found' });
+    }
+    
+    const updatedEnrollment = await enrollment.update({ status });
+    res.json(updatedEnrollment);
+  } catch (err) {
+    res.status(400).json({ message: 'Error updating enrollment status' });
+  }
 };

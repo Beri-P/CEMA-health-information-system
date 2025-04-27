@@ -1,28 +1,25 @@
-import { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { programsApi } from '../../services/api';
+import { getPrograms } from '../../services/api';
+import { Program } from '../../types';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
+import ErrorMessage from '../../components/common/ErrorMessage';
+import PageHeader from '../../components/common/PageHeader';
 
-interface Program {
-  program_id: string;
-  name: string;
-  description: string;
-  created_at: string;
-}
-
-const ProgramsList = () => {
+const ProgramsList: React.FC = () => {
   const [programs, setPrograms] = useState<Program[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   const fetchPrograms = async () => {
     try {
       setLoading(true);
-      const response = await programsApi.getAll();
+      setError(null);
+      const response = await getPrograms();
       setPrograms(response.data);
-      setError('');
     } catch (err) {
+      setError('Failed to load programs. Please try again.');
       console.error('Error fetching programs:', err);
-      setError('Failed to load health programs');
     } finally {
       setLoading(false);
     }
@@ -32,74 +29,48 @@ const ProgramsList = () => {
     fetchPrograms();
   }, []);
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this program?')) {
-      try {
-        await programsApi.delete(id);
-        fetchPrograms(); // Refresh the list
-      } catch (err) {
-        console.error('Error deleting program:', err);
-        setError('Failed to delete program');
-      }
-    }
-  };
-
   if (loading) {
-    return <div className="text-center my-5"><div className="spinner-border"></div></div>;
+    return <LoadingSpinner message="Loading programs..." />;
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto p-4">
+        <ErrorMessage message={error} onRetry={fetchPrograms} />
+      </div>
+    );
   }
 
   return (
-    <div>
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1>Health Programs</h1>
-        <Link to="/programs/new" className="btn btn-primary">
-          Add New Program
-        </Link>
+    <div className="container mx-auto p-4">
+      <PageHeader
+        title="Programs"
+        actionButton={{
+          label: "Add New Program",
+          to: "/programs/new"
+        }}
+      />
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {programs.map((program) => (
+          <div
+            key={program.id}
+            className="p-6 bg-white border rounded-lg hover:shadow-lg transition-shadow"
+          >
+            <h2 className="text-xl font-semibold mb-2">{program.name}</h2>
+            {program.description && (
+              <p className="text-gray-600">{program.description}</p>
+            )}
+          </div>
+        ))}
       </div>
 
-      {error && <div className="alert alert-danger">{error}</div>}
-
-      {programs.length === 0 ? (
-        <div className="alert alert-info">
-          No health programs found. Create your first program!
-        </div>
-      ) : (
-        <div className="table-responsive">
-          <table className="table table-striped table-hover">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Created At</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {programs.map((program) => (
-                <tr key={program.program_id}>
-                  <td>{program.name}</td>
-                  <td>{program.description}</td>
-                  <td>{new Date(program.created_at).toLocaleDateString()}</td>
-                  <td>
-                    <div className="btn-group">
-                      <Link 
-                        to={`/programs/${program.program_id}`} 
-                        className="btn btn-sm btn-info"
-                      >
-                        Edit
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(program.program_id)}
-                        className="btn btn-sm btn-danger"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {programs.length === 0 && (
+        <div className="text-center text-gray-500 mt-8">
+          <p>No programs found.</p>
+          <p className="mt-2">
+            Get started by adding your first program using the button above.
+          </p>
         </div>
       )}
     </div>

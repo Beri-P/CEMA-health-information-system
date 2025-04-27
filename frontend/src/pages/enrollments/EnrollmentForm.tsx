@@ -1,233 +1,137 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Formik, Form, Field, ErrorMessage, FormikHelpers } from 'formik';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams, Link } from 'react-router-dom';
+import { Formik, Form, Field } from 'formik';
+import { FormikErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import { programsApi, clientsApi, enrollmentsApi } from '../../services/api';
+import { createEnrollment, getPrograms } from '../../services/api';
+import { Program } from '../../types';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
+import CustomErrorMessage from '../../components/common/ErrorMessage';
 
-interface Program {
-  program_id: string;
-  name: string;
-  description: string;
+interface FormValues {
+  programId: string;
 }
 
-interface EnrollmentFormValues {
-  program_id: string;
-  status: string;
-  enrollment_date: string;
-  notes: string;
-}
-
-const EnrollmentSchema = Yup.object().shape({
-  program_id: Yup.string().required('Please select a program'),
-  status: Yup.string().required('Status is required'),
-  enrollment_date: Yup.string().required('Enrollment date is required'),
-  notes: Yup.string()
+const validationSchema = Yup.object({
+  programId: Yup.string()
+    .required('Please select a program')
 });
 
 const EnrollmentForm: React.FC = () => {
-  const { clientId } = useParams<{ clientId: string }>();
   const navigate = useNavigate();
-
+  const { clientId } = useParams<{ clientId: string }>();
   const [programs, setPrograms] = useState<Program[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [clientEnrolledPrograms, setClientEnrolledPrograms] = useState<string[]>([]);
-  const [clientName, setClientName] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
-  const initialValues: EnrollmentFormValues = {
-    program_id: '',
-    status: 'active',
-    enrollment_date: new Date().toISOString().split('T')[0],
-    notes: ''
+  const fetchPrograms = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await getPrograms();
+      setPrograms(response.data);
+    } catch (error) {
+      setError('Failed to load programs. Please try again.');
+      console.error('Error fetching programs:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        // load all programs
-        const { data: allPrograms } = await programsApi.getAll();
-        setPrograms(allPrograms);
+    fetchPrograms();
+  }, []);
 
-        if (clientId) {
-          // load client + their enrolled programs
-          const { data: client } = await clientsApi.getById(clientId);
-          setClientName(`${client.first_name} ${client.last_name}`);
-
-          const enrolledIds: string[] = client.Programs?.map((p: Program) => p.program_id) || [];
-          setClientEnrolledPrograms(enrolledIds);
-        }
-      } catch (err) {
-        console.error(err);
-        setError('Failed to load data');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [clientId]);
-
-  const handleSubmit = async (
-    values: EnrollmentFormValues,
-    { setSubmitting }: FormikHelpers<EnrollmentFormValues>
-  ) => {
+  const handleSubmit = async (values: FormValues) => {
     if (!clientId) return;
+
     try {
-      await enrollmentsApi.enroll(clientId, values.program_id, {
-        status: values.status,
-        enrollment_date: values.enrollment_date,
-        notes: values.notes
+      await createEnrollment({
+        clientId: parseInt(clientId),
+        programId: parseInt(values.programId),
+        status: 'active'
       });
-      navigate(`/clients/${clientId}/view`);
+      navigate(`/clients/${clientId}`);
     } catch (err) {
-      console.error(err);
-      setError('Failed to enroll client in program');
-    } finally {
-      setSubmitting(false);
+      setError('Failed to create enrollment. Please try again.');
+      console.error('Error creating enrollment:', err);
     }
   };
 
   if (loading) {
-    return (
-      <div className="text-center my-5">
-        <div className="spinner-border" role="status" />
-      </div>
-    );
+    return <LoadingSpinner message="Loading programs..." />;
   }
 
-  // filter out already-enrolled programs
-  const availablePrograms = programs.filter(
-    (p) => !clientEnrolledPrograms.includes(p.program_id)
-  );
-
   return (
-    <div>
-      <h1>Enroll Client in Program</h1>
-      {clientName && <p className="lead">Client: {clientName}</p>}
+    <div className="max-w-md mx-auto mt-8">
+      <div className="mb-6 flex items-center">
+        <Link
+          to={`/clients/${clientId}`}
+          className="text-blue-500 hover:text-blue-600 mr-4"
+        >
+          ← Back to Client
+        </Link>
+        <h2 className="text-2xl font-bold">Enroll in Program</h2>
+      </div>
 
-      {error && <div className="alert alert-danger">{error}</div>}
+      {error && (
+        <div className="mb-4">
+          <CustomErrorMessage message={error} onRetry={fetchPrograms} />
+        </div>
+      )}
 
-      {availablePrograms.length === 0 ? (
-        <div className="alert alert-info">
-          <p>Client is already enrolled in all available programs.</p>
-          <button
-            className="btn btn-primary mt-2"
-            onClick={() => navigate(`/clients/${clientId}/view`)}
+      {programs.length === 0 ? (
+        <div className="text-center">
+          <p className="text-gray-500 mb-4">No programs available for enrollment.</p>
+          <Link
+            to="/programs/new"
+            className="text-blue-500 hover:text-blue-600"
           >
-            ← Return to Client Profile
-          </button>
+            Create a new program
+          </Link>
         </div>
       ) : (
-        <div className="card">
-          <div className="card-body">
-            <Formik
-              initialValues={initialValues}
-              validationSchema={EnrollmentSchema}
-              onSubmit={handleSubmit}
-            >
-              {({ isSubmitting }) => (
-                <Form>
-                  {/* Program selector */}
-                  <div className="mb-3">
-                    <label htmlFor="program_id" className="form-label">
-                      Select Program
-                    </label>
-                    <Field
-                      as="select"
-                      id="program_id"
-                      name="program_id"
-                      className="form-select"
-                    >
-                      <option value="">-- Select a program --</option>
-                      {availablePrograms.map((prog) => (
-                        <option key={prog.program_id} value={prog.program_id}>
-                          {prog.name}
-                        </option>
-                      ))}
-                    </Field>
-                    <ErrorMessage
-                      name="program_id"
-                      component="div"
-                      className="text-danger"
-                    />
-                  </div>
+        <Formik
+          initialValues={{ programId: '' }}
+          validationSchema={validationSchema}
+          onSubmit={handleSubmit}
+        >
+          {({ isSubmitting }) => (
+            <Form className="space-y-4 bg-white p-6 rounded-lg shadow">
+              <div>
+                <label htmlFor="programId" className="block mb-1 font-medium">
+                  Select Program
+                </label>
+                <Field
+                  as="select"
+                  id="programId"
+                  name="programId"
+                  className="w-full border rounded p-2"
+                >
+                  <option value="">Select a program...</option>
+                  {programs.map((program) => (
+                    <option key={program.id} value={program.id}>
+                      {program.name}
+                    </option>
+                  ))}
+                </Field>
+                <FormikErrorMessage
+                  name="programId"
+                  component="div"
+                  className="text-red-500 text-sm mt-1"
+                />
+              </div>
 
-                  {/* Status */}
-                  <div className="mb-3">
-                    <label htmlFor="status" className="form-label">
-                      Status
-                    </label>
-                    <Field
-                      as="select"
-                      id="status"
-                      name="status"
-                      className="form-select"
-                    >
-                      {['active', 'pending', 'completed', 'suspended'].map((s) => (
-                        <option key={s} value={s}>
-                          {s.charAt(0).toUpperCase() + s.slice(1)}
-                        </option>
-                      ))}
-                    </Field>
-                    <ErrorMessage name="status" component="div" className="text-danger" />
-                  </div>
-
-                  {/* Enrollment date */}
-                  <div className="mb-3">
-                    <label htmlFor="enrollment_date" className="form-label">
-                      Enrollment Date
-                    </label>
-                    <Field
-                      type="date"
-                      id="enrollment_date"
-                      name="enrollment_date"
-                      className="form-control"
-                    />
-                    <ErrorMessage
-                      name="enrollment_date"
-                      component="div"
-                      className="text-danger"
-                    />
-                  </div>
-
-                  {/* Notes */}
-                  <div className="mb-3">
-                    <label htmlFor="notes" className="form-label">
-                      Notes
-                    </label>
-                    <Field
-                      as="textarea"
-                      id="notes"
-                      name="notes"
-                      className="form-control"
-                      rows={3}
-                      placeholder="Any additional notes..."
-                    />
-                    <ErrorMessage name="notes" component="div" className="text-danger" />
-                  </div>
-
-                  {/* Actions */}
-                  <div className="d-flex gap-2">
-                    <button
-                      type="submit"
-                      className="btn btn-primary"
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? 'Enrolling...' : 'Enroll Client'}
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      onClick={() => navigate(`/clients/${clientId}/view`)}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </Form>
-              )}
-            </Formik>
-          </div>
-        </div>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 disabled:opacity-50 transition-colors"
+              >
+                {isSubmitting ? 'Enrolling...' : 'Enroll'}
+              </button>
+            </Form>
+          )}
+        </Formik>
       )}
     </div>
   );

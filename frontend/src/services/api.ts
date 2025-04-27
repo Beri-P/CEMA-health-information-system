@@ -1,50 +1,49 @@
 import axios from 'axios';
+import { Client, Program, Enrollment } from '../types';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = 'http://localhost:3000/api';
 
-// Add request interceptor to include token in requests
-axios.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+const api = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
 
-// Programs API
-export const programsApi = {
-  getAll: () => axios.get(`${API_URL}/programs`),
-  getById: (id: string) => axios.get(`${API_URL}/programs/${id}`),
-  create: (program: any) => axios.post(`${API_URL}/programs`, program),
-  update: (id: string, program: any) => axios.put(`${API_URL}/programs/${id}`, program),
-  delete: (id: string) => axios.delete(`${API_URL}/programs/${id}`)
-};
+// Client API calls
+export const getClients = () => 
+  api.get<Client[]>('/clients');
 
-// Clients API
-export const clientsApi = {
-  getAll: (searchTerm?: string) => axios.get(`${API_URL}/clients`, { 
-    params: { q: searchTerm } 
-  }),
-  getById: (id: string) => axios.get(`${API_URL}/clients/${id}`),
-  create: (client: any) => axios.post(`${API_URL}/clients`, client),
-  update: (id: string, client: any) => axios.put(`${API_URL}/clients/${id}`, client),
-  delete: (id: string) => axios.delete(`${API_URL}/clients/${id}`),
-  getPrograms: (id: string) => axios.get(`${API_URL}/clients/${id}/programs`)
-};
+export const getClient = (id: number) => 
+  api.get<Client>(`/clients/${id}`);
 
-// Enrollments API
-export const enrollmentsApi = {
-  enroll: (clientId: string, programId: string, data: any) => 
-    axios.post(`${API_URL}/clients/${clientId}/programs/${programId}`, data),
-  unenroll: (clientId: string, programId: string) => 
-    axios.delete(`${API_URL}/clients/${clientId}/programs/${programId}`)
-};
+export const createClient = (data: Omit<Client, 'id' | 'createdAt' | 'updatedAt'>) => 
+  api.post<Client>('/clients', data);
 
-export default {
-  programs: programsApi,
-  clients: clientsApi,
-  enrollments: enrollmentsApi
-};
+export const updateClient = (id: number, data: Partial<Client>) => 
+  api.put<Client>(`/clients/${id}`, data);
+
+// Program API calls
+export const getPrograms = () => 
+  api.get<Program[]>('/programs');
+
+export const getProgram = (id: number) => 
+  api.get<Program>(`/programs/${id}`);
+
+export const createProgram = (data: Omit<Program, 'id' | 'createdAt' | 'updatedAt'>) => 
+  api.post<Program>('/programs', data);
+
+// Enrollment API calls
+export const createEnrollment = (data: { 
+  clientId: number; 
+  programId: number; 
+  status?: 'active' | 'completed' | 'withdrawn' 
+}) => api.post<Enrollment>('/enrollments', data);
+
+export const getClientEnrollments = (clientId: number) => 
+  api.get<Enrollment[]>(`/enrollments/client/${clientId}`);
+
+export const updateEnrollmentStatus = (id: number, status: Enrollment['status']) => 
+  api.put<Enrollment>(`/enrollments/${id}/status`, { status });
+
+export default api;

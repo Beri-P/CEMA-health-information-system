@@ -1,27 +1,34 @@
-const sequelize = require("../config/database");
-const { DataTypes } = require("sequelize");
+const sequelize = require('../config/database');
+const Client = require('./client.model');
+const Program = require('./program.model');
+const Enrollment = require('./enrollment.model');
 
-// Import models
-const User = require("./user.model")(sequelize, DataTypes);
-const Client = require("./client.model")(sequelize, DataTypes);
-const Program = require("./program.model")(sequelize, DataTypes);
-const Enrollment = require("./enrollment.model")(sequelize, DataTypes);
+// Set up associations after all models are loaded
+Client.belongsToMany(Program, { 
+  through: {
+    model: Enrollment,
+    unique: false
+  },
+  foreignKey: 'clientId',
+  otherKey: 'programId'
+});
 
-// Define associations
-Client.belongsToMany(Program, { through: Enrollment });
-Program.belongsToMany(Client, { through: Enrollment });
+Program.belongsToMany(Client, { 
+  through: {
+    model: Enrollment,
+    unique: false
+  },
+  foreignKey: 'programId',
+  otherKey: 'clientId'
+});
 
-Client.hasMany(Enrollment);
-Enrollment.belongsTo(Client);
+// Enrollment associations
+Enrollment.belongsTo(Client, { foreignKey: 'clientId' });
+Enrollment.belongsTo(Program, { foreignKey: 'programId' });
 
-Program.hasMany(Enrollment);
-Enrollment.belongsTo(Program);
-
-// Export models
 module.exports = {
   sequelize,
-  User,
   Client,
   Program,
-  Enrollment,
+  Enrollment
 };

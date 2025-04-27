@@ -1,31 +1,42 @@
-const express = require("express");
-const cors = require("cors");
-const dotenv = require("dotenv");
-const routes = require("./routes");
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const sequelize = require('./config/database');
+const clientRoutes = require('./routes/client.routes');
+const programRoutes = require('./routes/program.routes');
+const enrollmentRoutes = require('./routes/enrollment.routes');
+const userRoutes = require('./routes/user.routes');
+const errorHandler = require('./middleware/error.middleware');
 
-// Load environment variables
-dotenv.config();
-
-// Initialize express app
 const app = express();
-const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 // Routes
-app.use("/api", routes);
+app.use('/api/auth', userRoutes);
+app.use('/api/clients', clientRoutes);
+app.use('/api/programs', programRoutes);
+app.use('/api/enrollments', enrollmentRoutes);
 
-// Health check route
-app.get("/", (req, res) => {
-  res.send("Health Information System API is running!");
-});
+// Error handling
+app.use(errorHandler);
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+// Database sync and server start
+const PORT = process.env.PORT || 3000;
 
-module.exports = app; // For testing
+async function startServer() {
+  try {
+    await sequelize.sync();
+    console.log('Database synchronized successfully');
+    
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Unable to start server:', error);
+  }
+}
+
+startServer();
