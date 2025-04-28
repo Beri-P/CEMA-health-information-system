@@ -6,6 +6,7 @@ import ClientForm from './pages/clients/ClientForm';
 import ClientProfile from './pages/clients/ClientProfile';
 import ProgramsList from './pages/programs/ProgramsList';
 import ProgramForm from './pages/programs/ProgramForm';
+import ProgramDetail from './pages/programs/ProgramDetail';
 import EnrollmentForm from './pages/enrollments/EnrollmentForm';
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
               <Route path="/clients/:id" element={<ClientProfile />} />
               <Route path="/programs" element={<ProgramsList />} />
               <Route path="/programs/new" element={<ProgramForm />} />
+              <Route path="/programs/:id" element={<ProgramDetail />} />
               <Route path="/clients/:clientId/enroll" element={<EnrollmentForm />} />
             </Routes>
           </div>

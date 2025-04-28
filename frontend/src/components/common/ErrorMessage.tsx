@@ -7,12 +7,14 @@ interface ErrorMessageProps {
 
 const ErrorMessage: React.FC<ErrorMessageProps> = ({ message, onRetry }) => {
   return (
-    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-      <p className="mb-2">{message}</p>
+    <div className="alert alert-danger d-flex align-items-center justify-content-between">
+      <div>
+        <p className="mb-0">{message}</p>
+      </div>
       {onRetry && (
         <button
           onClick={onRetry}
-          className="text-sm underline hover:no-underline focus:outline-none"
+          className="btn btn-outline-danger btn-sm ms-3"
         >
           Try again
         </button>

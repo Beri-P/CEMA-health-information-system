@@ -35,14 +35,14 @@ const ProgramsList: React.FC = () => {
 
   if (error) {
     return (
-      <div className="container mx-auto p-4">
+      <div className="container">
         <ErrorMessage message={error} onRetry={fetchPrograms} />
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container">
       <PageHeader
         title="Programs"
         actionButton={{
@@ -51,26 +51,32 @@ const ProgramsList: React.FC = () => {
         }}
       />
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="row g-4">
         {programs.map((program) => (
-          <div
-            key={program.id}
-            className="p-6 bg-white border rounded-lg hover:shadow-lg transition-shadow"
-          >
-            <h2 className="text-xl font-semibold mb-2">{program.name}</h2>
-            {program.description && (
-              <p className="text-gray-600">{program.description}</p>
-            )}
+          <div className="col-md-6 col-lg-4" key={program.id}>
+            <Link 
+              to={`/programs/${program.id}`}
+              className="card h-100 text-decoration-none text-dark"
+              style={{ transition: 'transform 0.2s' }}
+            >
+              <div className="card-body">
+                <h5 className="card-title">{program.name}</h5>
+                {program.description && (
+                  <p className="card-text text-muted">{program.description}</p>
+                )}
+              </div>
+              <div className="card-footer bg-transparent border-top-0">
+                <span className="text-primary">View details →</span>
+              </div>
+            </Link>
           </div>
         ))}
       </div>
 
       {programs.length === 0 && (
-        <div className="text-center text-gray-500 mt-8">
-          <p>No programs found.</p>
-          <p className="mt-2">
-            Get started by adding your first program using the button above.
-          </p>
+        <div className="text-center my-5">
+          <p className="text-muted">No programs found.</p>
+          <p>Get started by adding your first program using the button above.</p>
         </div>
       )}
     </div>

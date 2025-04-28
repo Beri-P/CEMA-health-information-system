@@ -7,6 +7,7 @@ export interface Client {
   email: string | null;
   createdAt?: string;
   updatedAt?: string;
+  Programs?: (Program & { Enrollment: Omit<Enrollment, 'Program'> })[];
 }
 
 export interface Program {
@@ -18,12 +19,13 @@ export interface Program {
 }
 
 export interface Enrollment {
-  id: number;
+  enrollmentId: string;
   clientId: number;
   programId: number;
   status: 'active' | 'completed' | 'withdrawn';
   enrollmentDate: string;
   Program?: Program;
+  Client?: Client;
   createdAt?: string;
   updatedAt?: string;
 }

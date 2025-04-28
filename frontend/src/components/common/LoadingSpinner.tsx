@@ -9,16 +9,18 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   size = 'medium', 
   message = 'Loading...' 
 }) => {
-  const sizeClasses = {
-    small: 'h-4 w-4',
-    medium: 'h-8 w-8',
-    large: 'h-12 w-12'
+  const spinnerSize = {
+    small: 'spinner-border-sm',
+    medium: '',
+    large: 'spinner-border-lg'
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-64">
-      <div className={`animate-spin rounded-full border-4 border-blue-200 border-t-blue-500 ${sizeClasses[size]}`} />
-      <p className="mt-4 text-gray-600">{message}</p>
+    <div className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '200px' }}>
+      <div className={`spinner-border text-primary ${spinnerSize[size]}`} role="status">
+        <span className="visually-hidden">Loading...</span>
+      </div>
+      <p className="mt-3 text-muted">{message}</p>
     </div>
   );
 };

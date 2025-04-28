@@ -6,6 +6,8 @@ import PageHeader from '../../components/common/PageHeader';
 
 const ClientsList: React.FC = () => {
   const [clients, setClients] = useState<Client[]>([]);
+  const [filteredClients, setFilteredClients] = useState<Client[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -15,6 +17,7 @@ const ClientsList: React.FC = () => {
       setError(null);
       const response = await getClients();
       setClients(response.data);
+      setFilteredClients(response.data);
     } catch (err) {
       setError('Failed to load clients. Please try again.');
       console.error('Error fetching clients:', err);
@@ -26,6 +29,17 @@ const ClientsList: React.FC = () => {
   useEffect(() => {
     fetchClients();
   }, []);
+
+  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const term = event.target.value.toLowerCase();
+    setSearchTerm(term);
+    
+    const filtered = clients.filter(client => 
+      client.firstName.toLowerCase().includes(term) || 
+      client.lastName.toLowerCase().includes(term)
+    );
+    setFilteredClients(filtered);
+  };
 
   if (loading) {
     return (
@@ -63,8 +77,23 @@ const ClientsList: React.FC = () => {
         }}
       />
 
+      <div className="mb-4">
+        <div className="input-group">
+          <span className="input-group-text">
+            <i className="bi bi-search"></i>
+          </span>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Search clients by name..."
+            value={searchTerm}
+            onChange={handleSearch}
+          />
+        </div>
+      </div>
+
       <div className="row g-4">
-        {clients.map((client) => (
+        {filteredClients.map((client) => (
           <div className="col-md-6 col-lg-4" key={client.id}>
             <Link 
               to={`/clients/${client.id}`}
@@ -90,12 +119,18 @@ const ClientsList: React.FC = () => {
         ))}
       </div>
 
-      {clients.length === 0 && (
+      {filteredClients.length === 0 && (
         <div className="text-center my-5 py-5">
-          <p className="text-muted">No clients found.</p>
-          <p>
-            Get started by adding your first client using the button above.
-          </p>
+          {searchTerm ? (
+            <p className="text-muted">No clients found matching "{searchTerm}"</p>
+          ) : (
+            <>
+              <p className="text-muted">No clients found.</p>
+              <p>
+                Get started by adding your first client using the button above.
+              </p>
+            </>
+          )}
         </div>
       )}
     </div>

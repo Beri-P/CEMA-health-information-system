@@ -1,5 +1,5 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/database");
 
 const Enrollment = sequelize.define(
   "Enrollment",
@@ -8,45 +8,45 @@ const Enrollment = sequelize.define(
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
-      field: 'enrollment_id'
+      field: "enrollment_id",
     },
     clientId: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: "Client",
-        key: "clientId",
+        model: "clients",
+        key: "id",
       },
-      field: 'client_id'
+      field: "client_id",
     },
     programId: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: "Program",
-        key: "programId",
+        model: "programs",
+        key: "id",
       },
-      field: 'program_id'
+      field: "program_id",
     },
     enrollmentDate: {
       type: DataTypes.DATEONLY,
       allowNull: false,
       defaultValue: DataTypes.NOW,
-      field: 'enrollment_date'
+      field: "enrollment_date",
     },
     status: {
       type: DataTypes.STRING(50),
       allowNull: false,
-      defaultValue: "active"
+      defaultValue: "active",
     },
     notes: {
-      type: DataTypes.TEXT
-    }
+      type: DataTypes.TEXT,
+    },
   },
   {
     tableName: "enrollment",
     timestamps: true,
-    underscored: true
+    underscored: true,
   }
 );
 
